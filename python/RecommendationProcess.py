@@ -12,13 +12,6 @@ def find_tree(tree_id, df):
     return row
 
 
-# take a tree object in order to create a suitable row for the dataframe
-def create_tree(tree, df):
-    new_row = pd.DataFrame
-    df.insert(0, new_row)
-    return
-
-
 # take a dataframe and scale it using standard scaling method
 def scale_df(df):
     scaler = StandardScaler()
@@ -104,6 +97,12 @@ def filter_by_radius(m_radius, df, user_position):
 #     df = filter_by_radius(df)
 #     return df
 
+#take tree values and create a new tree to be inserted in the dataframe
+def create_tree(domanialite, frenchname, type, species, stageofdev, min_circumference, max_circumference, min_height, max_height, df):
+
+def process(domanialite, frenchname, type, species, stageofdev, min_circumference, max_circumference, min_height, max_height):
+    df = create_tree(domanialite, frenchname, type, species, stageofdev, (max_circumference - min_circumference)/2, (max_height - min_height) / 2, df)
+    return
 
 if __name__ == '__main__':
     dfp = pd.read_csv("../resources/les-arbres.csv", encoding='latin1', sep=';')
