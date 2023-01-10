@@ -45,6 +45,15 @@ def remove_different_domanialite(df):
     df = df[df['DOMANIALITE'] == element_to_keep]
     return df
 
+def remove_height_between(low, high, df):
+    mask = (df["HEIGHT (m)"] < low) | (df["HEIGHT (m)"] > high)
+    df = df[~mask]
+    return df
+
+def remove_circumference_between(low, high, df):
+    mask = (df["CIRCUMFERENCE (cm)"] < low) | (df["CIRCUMFERENCE (cm)"] > high)
+    df = df[~mask]
+    return df
 
 # Take a tree and in entry and give all similar trees within the trust interval in a dataframe
 def recommend_a_set_of_tree(df, tree_ID):
@@ -58,6 +67,8 @@ def recommend_a_set_of_tree(df, tree_ID):
 
 # take two lat/long tuple and return the distance in meters between them
 def calculate_distance_from_point(point1, point2):
+    if point2 == "":
+        return 0
     coordinates_list = point1.split(',')
     point1 = tuple(map(float, coordinates_list))
     coordinates_list = point2.split(',')
@@ -97,17 +108,53 @@ def filter_by_radius(m_radius, df, user_position):
 #     df = filter_by_radius(df)
 #     return df
 
-#take tree values and create a new tree to be inserted in the dataframe
-def create_tree(domanialite, frenchname, type, species, stageofdev, min_circumference, max_circumference, min_height, max_height, df):
+# take tree values and create a new tree to be inserted in the dataframe
+def create_tree(domanialite, frenchname, type, species, stageofdev, circumference, height, df):
+    data = pd.Series({"IDBASE": 0,
+            "LOCATION TYPE": "arbre",
+            "DISTRICT": "",
+            "ADRESS COMPLEMENT": "",
+            "NUMBER": "",
+            "LOCATION / ADDRESS": "",
+            "IDEMPLACEMENT": "",
+            "DOMANIALITE": domanialite,
+            "FRENCH NAME": frenchname,
+            "TYPE": type,
+            "SPECIES": species,
+            "VARIETY": "",
+            "CIRCUMFERENCE (cm)": circumference,
+            "HEIGHT (m)": height,
+            "STAGE OF DEVELOPMENT": stageofdev,
+            "REMARKABLE": "",
+            "geo_point_2d": ""})
+    df.loc[0] = data
+    return df
 
-def process(domanialite, frenchname, type, species, stageofdev, min_circumference, max_circumference, min_height, max_height):
-    df = create_tree(domanialite, frenchname, type, species, stageofdev, (max_circumference - min_circumference)/2, (max_height - min_height) / 2, df)
-    return
+
+def process_with_a_new_tree(domanialite, frenchname, type, species, stageofdev, min_circumference, max_circumference,
+                            min_height,
+                            max_height, df, radius, position):
+    df = create_tree(domanialite, frenchname, type, species, stageofdev, (max_circumference - min_circumference) / 2,
+                     (max_height - min_height) / 2, df)
+    result = recommend_a_set_of_tree(df, 0)
+    result.reset_index
+    if radius is not None :
+        result = filter_by_radius(radius, result, position)
+    if type is not None :
+        result = remove_different_type_of_trees(result)
+    if domanialite is not None :
+        result = remove_different_domanialite(result)
+    if stageofdev is not None :
+        result = remove_different_stage_of_developpment(result)
+    if min_height is not None and max_height is not None :
+        result = remove_height_between(min_height, max_height, result)
+    if min_circumference is not None and max_height is not None:
+        result = remove_circumference_between(min_circumference,max_circumference, result)
+    return result
+
 
 if __name__ == '__main__':
     dfp = pd.read_csv("../resources/les-arbres.csv", encoding='latin1', sep=';')
     print(dfp.columns)
-    result = recommend_a_set_of_tree(dfp, 140805)
-    result.reset_index()
-    result = filter_by_radius(100, result, "48.87083381287059, 2.4129483321923346")
+    result = process_with_a_new_tree("ALIGMENT", "Marronier", "Aesculus", "hippocastanum", "YOUNG", 10, 30, 0, 10,dfp,1000,"48.84129152798434, 2.373479285945392")
     print(result)
