@@ -53,7 +53,7 @@ def get_satellite_image(lat, lon, meter_radius):
 
     # Create a Sentinel Hub WMS request
     wms_request = WmsRequest(
-        layer="TRUE_COLOR_HARMONIZED",
+        layer="TRUE_COLOR_L2A",
         width=img_width,
         height=img_height,
         time='latest',
